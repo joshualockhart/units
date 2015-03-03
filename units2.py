@@ -49,19 +49,21 @@ class Term(object):
         self.data={units[symbol]: exponent for symbol,exponent
                 in zip(symbols, powers)}
 
+    def equals(self, unit):
+        unit_ = copy.copy(unit)
+        if unit_.to(self) != None:
+            if unit_.coefficient == self.coefficient:
+                return True
+        return False
+    
     def add(self, *others):
-        my_kinds = [x.kind for x in self.data.keys()]
-        my_kinds.sort()
-        my_exponents = self.data.values()
-        my_exponents.sort()
-        for o in others:
-            kinds = [x.kind for x in o.data.keys()]
-            kinds.sort()
-            exponents = o.data.values()
-            exponents.sort()
-            if my_kinds != kinds or my_exponents != exponents:
+        others_ = [copy.copy(o) for o in others]
+
+        for o in others_:
+            if o.to(self) != None:
                 print "non matching units"
                 return Expression((self,))
+
         return Expression((self,)+others)
 
     def multiply(self, *others):
@@ -105,29 +107,33 @@ class Term(object):
         else:
             return str(self.coefficient)+'*'+prod
 
-    def to(self, unit):
+    def to(self, other):
         my_kinds = [x.kind for x in self.data.keys()]
         my_kinds.sort()
-        my_exponents = self.data.values()
-        my_exponents.sort()
         
-        kinds = [x.kind for x in unit.data.keys()]
+        kinds = [x.kind for x in other.data.keys()]
         kinds.sort()
-        exponents = unit.data.values()
-        exponents.sort()
-        if my_kinds != kinds or my_exponents != exponents:
+        
+        if my_kinds != kinds:
             print "non matching units"
-            return None
+            return -1
+
+        for u in self.data.keys():
+            for key in other.data.keys():
+                if key.kind == u.kind:
+                    if other.data[key] != self.data[u]:
+                        print "non matching units"
+                        return -1
 
         my_funds = [x.fundamental for x in self.data.keys()]
         my_funds.sort()
 
-        funds = [x.fundamental for x in unit.data.keys()]
+        funds = [x.fundamental for x in other.data.keys()]
         funds.sort()
 
         for i,j in zip(my_funds,funds):
             self.coefficient*=float(i)/float(j)
-        self.data = unit.data
+        self.data = other.data
 
 ### "ExpressionConstruct"
 
