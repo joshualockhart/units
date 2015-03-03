@@ -186,20 +186,3 @@ class Expression(object):
 
     def __str__(self):
         return '+'.join(map(str,self.terms))
-"""
-centimetres = Term('centimetres')
-metres = Term('metres')
-litres = Term('litres')
-millilitres = Term('millilitres')
-
-print (5*metres).equals(500*centimetres)
-
-quit()
-
-y = 5*centimetres*5*centimetres
-print (y).to(metres*metres)
-
-print ""
-
-print (5*millilitres*metres).to(litres*metres).unit()
-"""
