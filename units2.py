@@ -105,7 +105,7 @@ class Term(object):
         else:
             return str(self.coefficient)+'*'+prod
 
-    def convertTo(self, unit):
+    def to(self, unit):
         my_kinds = [x.kind for x in self.data.keys()]
         my_kinds.sort()
         my_exponents = self.data.values()
@@ -128,8 +128,6 @@ class Term(object):
         for i,j in zip(my_funds,funds):
             self.coefficient*=float(i)/float(j)
         self.data = unit.data
-    
-
 
 ### "ExpressionConstruct"
 
