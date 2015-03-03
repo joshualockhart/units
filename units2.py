@@ -1,3 +1,19 @@
+class Unit(object):
+    def __init__(self, name, kind, fundamental):
+        self.kind = kind
+        self.name = name
+        self.fundamental = fundamental
+
+metres = Unit("metres","length",100)
+litres = Unit("litres","volume",1000)
+centimetres = Unit("centimetres","length",1)
+millilitres = Unit("millilitres","volume",1)
+
+units = {"metres":metres, 
+         "litres":litres,
+         "centimetres":centimetres,
+         "millilitres":millilitres}
+
 class Term(object):
     def __init__(self, *args):
         lead=args[0]
@@ -13,22 +29,41 @@ class Term(object):
             self.from_dictionary(*args)
         else:
             self.from_lists(*args)
+
     def from_constant(self, constant):
         self.coefficient=constant
         self.data={}
+
     def from_symbol(self, symbol, coefficient=1, power=1):
+        unit = units[symbol]
         self.coefficient=coefficient
-        self.data={symbol:power}
+        self.data={unit:power}
+
     def from_dictionary(self, data, coefficient=1):
         self.data=data
         self.coefficient=coefficient
+
     def from_lists(self, symbols=[], powers=[], coefficient=1):
+        # TODO: make this work
         self.coefficient=coefficient
-        self.data={symbol: exponent for symbol,exponent
+        self.data={units[symbol]: exponent for symbol,exponent
                 in zip(symbols, powers)}
 
     def add(self, *others):
+        my_kinds = [x.kind for x in self.data.keys()]
+        my_kinds.sort()
+        my_exponents = self.data.values()
+        my_exponents.sort()
+        for o in others:
+            kinds = [x.kind for x in o.data.keys()]
+            kinds.sort()
+            exponents = o.data.values()
+            exponents.sort()
+            if my_kinds != kinds or my_exponents != exponents:
+                print "non matching units"
+                return Expression((self,))
         return Expression((self,)+others)
+
     def multiply(self, *others):
         result_data=dict(self.data)
         result_coeff=self.coefficient
@@ -60,7 +95,7 @@ class Term(object):
                 return symbol
             else:
                 return symbol+'^'+str(power)
-        symbol_strings=[symbol_string(symbol, power)
+        symbol_strings=[symbol_string(symbol.name, power)
                 for symbol, power in self.data.iteritems()]
         prod='*'.join(symbol_strings)
         if not prod:
@@ -69,6 +104,32 @@ class Term(object):
             return prod
         else:
             return str(self.coefficient)+'*'+prod
+
+    def convertTo(self, unit):
+        my_kinds = [x.kind for x in self.data.keys()]
+        my_kinds.sort()
+        my_exponents = self.data.values()
+        my_exponents.sort()
+        
+        kinds = [x.kind for x in unit.data.keys()]
+        kinds.sort()
+        exponents = unit.data.values()
+        exponents.sort()
+        if my_kinds != kinds or my_exponents != exponents:
+            print "non matching units"
+            return None
+
+        my_funds = [x.fundamental for x in self.data.keys()]
+        my_funds.sort()
+
+        funds = [x.fundamental for x in unit.data.keys()]
+        funds.sort()
+
+        for i,j in zip(my_funds,funds):
+            self.coefficient*=float(i)/float(j)
+        self.data = unit.data
+    
+
 
 ### "ExpressionConstruct"
 
@@ -96,48 +157,3 @@ class Expression(object):
 
     def __str__(self):
         return '+'.join(map(str,self.terms))
-
-### "withfunc"
-
-x=Term('x')
-y=Term('y')
-
-first=Term(5).multiply(Term('x'),Term('x'),Term('y'))
-second=Term(7).multiply(Term('x'))
-third=Term(2)
-expr=first.add(second,third)
-
-### "withop"
-
-x_plus_y=Term('x')+'y'
-print x_plus_y.terms[0].data
-
-five_x_ysq=Term('x')*5*'y'*'y'
-print five_x_ysq.data, five_x_ysq.coefficient
-
-### "RightUse"
-
-print 5*Term('x')
-
-### "HardTest"
-
-fivex=5*Term('x')
-print fivex.data, fivex.coefficient
-
-### "UseString"
-
-first=Term(5)*'x'*'x'*'y'
-second=Term(7)*'x'
-third=Term(2)
-expr=first+second+third
-print expr
-
-### "Callable"
-
-class MyCallable(object):
-    def __call__(self, name):
-        print "Hello, ", name
-
-x=MyCallable()
-
-x("James")
