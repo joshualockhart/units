@@ -1,3 +1,4 @@
+import copy 
 class Unit(object):
     def __init__(self, name, kind, fundamental):
         self.kind = kind
@@ -61,10 +62,10 @@ class Term(object):
 
         for o in others_:
             if o.to(self) != None:
-                print "non matching units"
+                print "add: non matching units"
                 return Expression((self,))
 
-        return Expression((self,)+others)
+        return Expression((self,)+tuple(others_))
 
     def multiply(self, *others):
         result_data=dict(self.data)
@@ -102,10 +103,7 @@ class Term(object):
         prod='*'.join(symbol_strings)
         if not prod:
             return str(self.coefficient)
-        if self.coefficient==1:
-            return prod
-        else:
-            return str(self.coefficient)+'*'+prod
+        return str(self.coefficient)+' '+prod
 
     def to(self, other):
         my_kinds = [x.kind for x in self.data.keys()]
@@ -115,14 +113,14 @@ class Term(object):
         kinds.sort()
         
         if my_kinds != kinds:
-            print "non matching units"
+            print "convert to: non matching units"
             return -1
 
         for u in self.data.keys():
             for key in other.data.keys():
                 if key.kind == u.kind:
                     if other.data[key] != self.data[u]:
-                        print "non matching units"
+                        print "convert to: non matching units"
                         return -1
 
         my_funds = [x.fundamental for x in self.data.keys()]
@@ -134,6 +132,15 @@ class Term(object):
         for i,j in zip(my_funds,funds):
             self.coefficient*=float(i)/float(j)
         self.data = other.data
+
+    def value(self):
+        return self.coefficient
+
+    def unit(self):
+        string = ""
+        for key in self.data.keys():
+            str += key.name+"^"+str(self.data[key]) + " "
+        return string
 
 ### "ExpressionConstruct"
 
